@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,10 +39,10 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
 
         [HttpGet]
         [Route("[controller]/[action]")]
-        [Route("[controller]/[action]/{id:int}")]
-        public async Task<IActionResult> Role(int id)
+        [Route("[controller]/[action]/{id}")]
+        public async Task<IActionResult> Role(string id)
         {
-            if (id == 0) return View(new RoleDto());
+            if (id == "") return View(new RoleDto());
 
             var role = await _identityService.GetRoleAsync(new RoleDto { Id = id });
 
@@ -57,8 +58,10 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
                 return View(role);
             }
 
-            if (role.Id == 0)
+            if (string.IsNullOrEmpty(role.Id))
             {
+                role.Id = Guid.NewGuid().ToString();
+
                 await _identityService.CreateRoleAsync(role);
             }
             else
@@ -89,8 +92,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
                 return View(user);
             }
 
-            if (user.Id == 0)
+            if (string.IsNullOrEmpty(user.Id))
             {
+                user.Id = Guid.NewGuid().ToString();
                 await _identityService.CreateUserAsync(user);
             }
             else
@@ -112,8 +116,8 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        [Route("[controller]/UserProfile/{id:int}")]
-        public async Task<IActionResult> UserProfile(int id)
+        [Route("[controller]/UserProfile/{id}")]
+        public async Task<IActionResult> UserProfile(string id)
         {
             var user = await _identityService.GetUserAsync(new UserDto { Id = id });
             if (user == null) return NotFound();
@@ -122,9 +126,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserRoles(int id, int? page)
+        public async Task<IActionResult> UserRoles(string id, int? page)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var userRoles = await _identityService.BuildUserRolesViewModel(id, page);
 
@@ -142,7 +146,7 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserRolesDelete(int id, int roleId)
+        public async Task<IActionResult> UserRolesDelete(string id, string roleId)
         {
             await _identityService.ExistsUserAsync(id);
             await _identityService.ExistsRoleAsync(roleId);
@@ -185,9 +189,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserClaims(int id, int? page)
+        public async Task<IActionResult> UserClaims(string id, int? page)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var claims = await _identityService.GetUserClaimsAsync(id, page ?? 1);
             claims.UserId = id;
@@ -196,9 +200,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserClaimsDelete(int id, int claimId)
+        public async Task<IActionResult> UserClaimsDelete(string id, int claimId)
         {
-            if (id == 0 || claimId == 0) return NotFound();
+            if (id == "" || claimId == 0) return NotFound();
 
             var claim = await _identityService.GetUserClaimAsync(id, claimId);
             if (claim == null) return NotFound();
@@ -217,9 +221,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserProviders(int id)
+        public async Task<IActionResult> UserProviders(string id)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var providers = await _identityService.GetUserProvidersAsync(id);
 
@@ -227,9 +231,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserProvidersDelete(int id, string providerKey)
+        public async Task<IActionResult> UserProvidersDelete(string id, string providerKey)
         {
-            if (id == 0 || string.IsNullOrEmpty(providerKey)) return NotFound();
+            if (id == "" || string.IsNullOrEmpty(providerKey)) return NotFound();
 
             var provider = await _identityService.GetUserProviderAsync(id, providerKey);
             if (provider == null) return NotFound();
@@ -248,9 +252,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserChangePassword(int id)
+        public async Task<IActionResult> UserChangePassword(string id)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var user = await _identityService.GetUserAsync(new UserDto { Id = id });
             var userDto = new UserChangePasswordDto { UserId = id, UserName = user.UserName };
@@ -300,9 +304,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> RoleClaims(int id, int? page)
+        public async Task<IActionResult> RoleClaims(string id, int? page)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var claims = await _identityService.GetRoleClaimsAsync(id, page ?? 1);
             claims.RoleId = id;
@@ -311,9 +315,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> RoleClaimsDelete(int id, int claimId)
+        public async Task<IActionResult> RoleClaimsDelete(string id, int claimId)
         {
-            if (id == 0 || claimId == 0) return NotFound();
+            if (id == "" || claimId == 0) return NotFound();
 
             var claim = await _identityService.GetRoleClaimAsync(id, claimId);
 
@@ -331,9 +335,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> RoleDelete(int id)
+        public async Task<IActionResult> RoleDelete(string id)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var roleDto = await _identityService.GetRoleAsync(new RoleDto { Id = id });
             if (roleDto == null) return NotFound();
@@ -362,9 +366,9 @@ namespace Skoruba.IdentityServer4.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> UserDelete(int id)
+        public async Task<IActionResult> UserDelete(string id)
         {
-            if (id == 0) return NotFound();
+            if (id == "") return NotFound();
 
             var user = await _identityService.GetUserAsync(new UserDto() { Id = id });
             if (user == null) return NotFound();
